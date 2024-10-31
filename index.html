@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Time to Drive Calculator</title>
     <style>
+        
+        * {
+            box-sizing: border-box;
+        }
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
@@ -58,12 +62,59 @@
             gap: 10px;
         }
         @media screen and (max-width:767px) {
+            input[type="number"] {
+                width: 100%;
+            }
             .row-btns button {
                 width: calc(50% - 5px);
             }
             .row-btns .main-btn{
                 width: 100%;
                 background-color: black;
+                margin-top: 20px;
+            }
+            thead {
+                display: none;
+            }
+            tr {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            td {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            padding: 5px;
+            }
+            td::before {
+                content: attr(data-label);
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+            td.row-num {
+                width: 20%;
+            }
+            td.row-dis {
+                width: 40%;
+            }
+            td.row-tdis {
+                width: 40%;
+                background-color: #d1d1d1;
+            }
+            td.row-speed {
+                width: 20%;
+            }
+            td.row-time {
+                width: 40%;
+                font-weight: 600;
+            }
+            td.row-ttime {
+                width: 40%;
+                background-color: #f1f1f1;
+                font-weight: 600;
             }
         }
     </style>
