@@ -15,13 +15,29 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            max-height: 100VH;
+            overflow-y: auto;
         }
         .container {
             background-color: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            HEIGHT: 100%;
+            OVERFLOW-Y: auto;
+        }
+        h1 {
+            margin: 20px 0 5px;
+        }
+        h2 {
+            margin: 0;
+        }
+        .calculator-form {
+            position: sticky;
+            top: -20px;
+            background-color: white;
+            padding: 20px 0;
+            z-index: 9;
         }
         table {
             width: 100%;
@@ -38,6 +54,13 @@
         th {
             background-color: #f4f4f4;
         }
+        tr {
+            opacity: .6;
+        }
+        tr:last-of-type {
+            border: 2px solid black;
+            opacity: 1;
+        }
         input[type="number"] {
             width: calc(100% - 22px);
             padding: 10px;
@@ -46,20 +69,42 @@
         }
         button {
             padding: 10px 20px;
-            background-color: #007BFF;
+            background-color: firebrick;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
         }
+        button:last-of-type {
+            background-color: #666;
+        }
         button:hover {
-            background-color: #0056b3;
+            background-color: #6622b9;
         }
         .row-btns{
             display: flex;
             flex-flow: row wrap;
             gap: 10px;
+        }
+        .logos {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .logos img {
+            width: 100px;
+        }
+
+        .logo-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            font-weight: 900;
+        }
+        input:focus {
+            outline-color: #6622b9;
         }
         @media screen and (max-width:767px) {
             input[type="number"] {
@@ -122,18 +167,29 @@
 <body>
 
 <div class="container">
-    <h1>Time to Drive Calculator</h1>
-
-    <label for="distance">Distance (km):</label>
-    <input type="number" id="distance" placeholder="Enter distance in kilometers" min="1">
+    <div class="logos">
+        <div class="logo-left">
+            <img src="logo.png" alt="">
+        </div>
+        <div class="logo-right">
+            <span>Powered by</span>
+            <img src="logo_bk.svg" alt="">
+        </div>
+    </div>
+    <h1>RX2 ASSISTANT</h1>
+    <h2>Calculate yout times</h2>
+    <div class="calculator-form">
+        <label for="distance">Distance (km):</label>
+        <input type="number" id="distance" placeholder="Enter distance in kilometers" min="1">
+        
+        <label for="speed">Speed (km/h):</label>
+        <input type="number" id="speed" placeholder="Enter speed in km/h" min="1">
     
-    <label for="speed">Speed (km/h):</label>
-    <input type="number" id="speed" placeholder="Enter speed in km/h" min="1">
-
-    <div class="row-btns">
-        <button class="main-btn" onclick="calculateTime()">Calculate</button>
-        <button onclick="startNewSection()">New Section</button>
-        <button onclick="undoLast()">Undo Last</button>
+        <div class="row-btns">
+            <button class="main-btn" onclick="calculateTime()" >Calculate</button>
+            <button onclick="startNewSection()">New Section</button>
+            <button onclick="undoLast()">Undo Last</button>
+        </div>
     </div>
 
     <div id="sectionsContainer">
@@ -143,6 +199,7 @@
 </div>
 
 <script>
+
     let totalDistance = 0;      // Total distance for the current section
 let totalTime = 0;          // Total time for the current section (in seconds)
 let count = 0;              // Count for row numbering in the current section
@@ -162,6 +219,11 @@ function formatTime(minutesDecimal) {
 
 // Function to calculate time for the given distance and speed
 function calculateTime() {
+    // Check if a section has been started
+    if (sectionId === 0) {
+        alert("Please start a New Section before calculating.");
+        return;
+    }
     let distance = parseFloat(document.getElementById('distance').value);
     let speed = parseFloat(document.getElementById('speed').value);
 
@@ -198,6 +260,12 @@ function calculateTime() {
 
     // Clear the distance input field after calculation but keep speed input
     document.getElementById('distance').value = '';
+
+    // Scroll to the last row
+    let lastRow = currentSection.querySelector("tbody tr:last-child");
+    if (lastRow) {
+        lastRow.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
 }
 
 // Function to start a new section and create a new table
@@ -211,7 +279,7 @@ function startNewSection() {
     // Create a new table for the new section
     let newSection = document.createElement('div');
     newSection.innerHTML = `
-        <h2>Section ${sectionId}</h2>
+        <h3>Section ${sectionId}</h3>
         <table id="section-${sectionId}">
             <thead>
                 <tr>
