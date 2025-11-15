@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <title>Time to Drive Calculator</title>
+    <style>
+        
+        * {
+            box-sizing: border-box;
+        }
+        html {
+            height: 100%;
+            max-height: 100%;
+            height: -webkit-fill-available;
+            overflow-y: auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+            width: min(100%,700px);
+        }
+        h1 {
+            margin: 20px 0 5px;
+        }
+        h2 {
+            margin: 0;
+        }
+        .calculator-form {
+            background-color: white;
+            padding: 20px 0;
+        }
+        .calculator-form.fixed {
+            position: fixed;
+            width: 100%;
+            left: 0;
+            top: 0;
+            background-color: white;
+            padding: 20px 20px;
+            z-index: 9;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        tr {
+            opacity: .6;
+        }
+        tr:last-of-type {
+            border: 2px solid black;
+            opacity: 1;
+        }
+        input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: firebrick;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:last-of-type {
+            background-color: #666;
+        }
+        button:hover {
+            background-color: #6622b9;
+        }
+        .row-btns{
+            display: flex;
+            flex-flow: row wrap;
+            gap: 10px;
+        }
+        .logos {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .logos img {
+            width: 100px;
+        }
+
+        .logo-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            font-weight: 900;
+        }
+        input:focus {
+            outline-color: #6622b9;
+        }
+        @media screen and (max-width:767px) {
+            input[type="number"] {
+                width: 100%;
+            }
+            .row-btns button {
+                width: calc(50% - 5px);
+            }
+            .row-btns .main-btn{
+                width: 100%;
+                background-color: black;
+                margin-top: 20px;
+            }
+            thead {
+                display: none;
+            }
+            tr {
+                display: flex;
+                flex-wrap: wrap;
+            }
+            td {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            padding: 5px;
+            }
+            td::before {
+                content: attr(data-label);
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+            td.row-num {
+                width: 20%;
+            }
+            td.row-dis {
+                width: 40%;
+            }
+            td.row-tdis {
+                width: 40%;
+                background-color: #d1d1d1;
+            }
+            td.row-speed {
+                width: 20%;
+            }
+            td.row-time {
+                width: 40%;
+                font-weight: 600;
+            }
+            td.row-ttime {
+                width: 40%;
+                background-color: #f1f1f1;
+                font-weight: 600;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logos">
+        <div class="logo-left">
+            <img src="logo.png" alt="">
+        </div>
+        <div class="logo-right">
+            <span>Powered by</span>
+            <img src="logo_bk.svg" alt="">
+        </div>
+    </div>
+    <h1>RX2 ASSISTANT</h1>
+    <h2>Calculate yout times</h2>
+    <div class="calculator-form">
+        <label for="distance">Distance (km):</label>
+        <input type="number" id="distance" placeholder="Enter distance in kilometers" min="1">
+        
+        <label for="speed">Speed (km/h):</label>
+        <input type="number" id="speed" placeholder="Enter speed in km/h" min="1">
+    
+        <div class="row-btns">
+            <button class="main-btn" onclick="calculateTime()" >Calculate</button>
+            <button onclick="startNewSection()">New Section</button>
+            <button onclick="undoLast()">Undo Last</button>
+        </div>
+    </div>
+
+    <div id="sectionsContainer">
+        <!-- Tables for different sections will be added here -->
+    </div>
+
+</div>
+
+<script>
+
+    let totalDistance = 0;      // Total distance for the current section
+let totalTime = 0;          // Total time for the current section (in seconds)
+let count = 0;              // Count for row numbering in the current section
+let sectionId = 0;          // Unique ID for each section
+let history = [];           // To store history for undo
+
+// Helper function to format time in MM:SS format
+function formatTime(minutesDecimal) {
+    let minutes = Math.floor(minutesDecimal);           // Get the whole minutes
+    let seconds = Math.round((minutesDecimal - minutes) * 60);  // Convert fractional minutes to seconds
+    if (seconds === 60) {  // Handle cases where seconds round to 60
+        minutes++;
+        seconds = 0;
+    }
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;  // Format as MM:SS
+}
+
+// Function to calculate time for the given distance and speed
+function calculateTime() {
+    // Check if a section has been started
+    if (sectionId === 0) {
+        alert("Please start a New Section before calculating.");
+        return;
+    }
+    let distance = parseFloat(document.getElementById('distance').value);
+    let speed = parseFloat(document.getElementById('speed').value);
+
+    // Validate inputs
+    if (distance <= 0 || speed <= 0 || isNaN(distance) || isNaN(speed)) {
+        alert("Please enter valid positive numbers for both distance and speed.");
+        return;
+    }
+
+    // Calculate time in hours and convert to minutes
+    let timeInHours = distance / speed;
+    let timeInMinutes = timeInHours * 60;  // Keep it in decimal format for seconds calculation
+
+    // Update total distance and time (in seconds)
+    totalDistance += distance;
+    totalTime += timeInMinutes;
+
+    count++;
+
+    // Update the history stack to track the last entry for undo
+    history.push({ distance, speed, timeInMinutes });
+
+    // Display result in the current section table
+    let currentSection = document.getElementById('section-' + sectionId);
+    let row = `<tr>
+                <td class="row-num">${count}</td>
+                <td class="row-dis" data-label="Distance">${distance}</td>
+                <td class="row-tdis" data-label="Total Distance">${totalDistance.toFixed(2)}</td>
+                <td class="row-speed" data-label="Speed">${speed}</td>
+                <td class="row-time" data-label="Time">${formatTime(timeInMinutes)}</td>
+                <td class="row-ttime" data-label="Total Time">${formatTime(totalTime)}</td>
+               </tr>`;
+    currentSection.querySelector('tbody').innerHTML += row;
+
+    // Clear the distance input field after calculation but keep speed input
+    document.getElementById('distance').value = '';
+
+    // Scroll to the last row
+    let lastRow = currentSection.querySelector("tbody tr:last-child");
+    if (lastRow) {
+        lastRow.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+}
+
+// Function to start a new section and create a new table
+function startNewSection() {
+    sectionId++; // Increment section ID
+    count = 0;   // Reset count for the new section
+    totalDistance = 0;  // Reset total distance for the new section
+    totalTime = 0;      // Reset total time (in minutes) for the new section
+    history = [];       // Clear history for the new section
+
+    // Create a new table for the new section
+    let newSection = document.createElement('div');
+    newSection.innerHTML = `
+        <h3>Section ${sectionId}</h3>
+        <table id="section-${sectionId}">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Distance (km)</th>
+                    <th>Total Distance (km)</th>
+                    <th>Speed (km/h)</th>
+                    <th>Time (minutes:seconds)</th>
+                    <th>Total Time (minutes:seconds)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be added here -->
+            </tbody>
+        </table>
+    `;
+    document.getElementById('sectionsContainer').appendChild(newSection);
+}
+
+// Function to undo the last calculation
+function undoLast() {
+    if (history.length === 0) {
+        alert("No calculations to undo!");
+        return;
+    }
+
+    // Get the last calculation from history
+    let lastEntry = history.pop();
+
+    // Update total distance and time (in minutes)
+    totalDistance -= lastEntry.distance;
+    totalTime -= lastEntry.timeInMinutes;
+    count--;
+
+    // Remove the last row in the current table
+    let currentSection = document.getElementById('section-' + sectionId);
+    let tableBody = currentSection.querySelector('tbody');
+    tableBody.deleteRow(tableBody.rows.length - 1);  // Remove the last row
+}
+
+
+window.addEventListener("scroll", function () {
+    if (window.scrollY > 50) {
+        if (document.querySelector(".container").offsetHeight > window.innerHeight + 50) {
+            document.querySelector(".calculator-form").classList.add("fixed");
+        }
+    } else {
+        document.querySelector(".calculator-form").classList.remove("fixed");
+    }
+});
+
+
+</script>
+
+</body>
+</html>
